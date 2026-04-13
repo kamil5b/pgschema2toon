@@ -41,12 +41,18 @@ jobs:
                   GOOS: ${{ matrix.goos }}
                   GOARCH: ${{ matrix.goarch }}
               run: |
-                  OUTPUT_NAME="pgschema2toon"
+                  BINARY_NAME="pgschema2toon"
                   if [ "${{ matrix.goos }}" = "windows" ]; then
-                    OUTPUT_NAME="${OUTPUT_NAME}.exe"
+                    BINARY_NAME="${BINARY_NAME}.exe"
                   fi
                   mkdir -p dist
-                  go build -o dist/${OUTPUT_NAME} ./cmd/pg2toon
+                  go build -o dist/${BINARY_NAME} ./cmd/pg2toon
+
+                  FINAL_NAME="${{ matrix.goarch }}-${{ matrix.goos }}-pgschema2toon"
+                  if [ "${{ matrix.goos }}" = "windows" ]; then
+                    FINAL_NAME="${FINAL_NAME}.exe"
+                  fi
+                  mv dist/${BINARY_NAME} dist/${FINAL_NAME}
 
             - name: Upload to Release
               uses: softprops/action-gh-release@v1
