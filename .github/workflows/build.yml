@@ -1,0 +1,52 @@
+name: Build
+
+on:
+    push:
+        tags:
+            - "v*"
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                include:
+                    - goos: linux
+                      goarch: amd64
+                    - goos: linux
+                      goarch: arm64
+                    - goos: windows
+                      goarch: amd64
+                    - goos: windows
+                      goarch: arm64
+                    - goos: darwin
+                      goarch: amd64
+                    - goos: darwin
+                      goarch: arm64
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-go@v4
+              with:
+                  go-version: "1.26.0"
+
+            - name: Build
+              env:
+                  CGO_ENABLED: 0
+                  GOOS: ${{ matrix.goos }}
+                  GOARCH: ${{ matrix.goarch }}
+              run: |
+                  OUTPUT_NAME="pgschema2toon"
+                  if [ "${{ matrix.goos }}" = "windows" ]; then
+                    OUTPUT_NAME="${OUTPUT_NAME}.exe"
+                  fi
+                  mkdir -p dist
+                  go build -o dist/${OUTPUT_NAME} ./cmd/pg2toon
+
+            - name: Upload artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: pg2toon-${{ matrix.goos }}-${{ matrix.goarch }}
+                  path: dist/*
+                  retention-days: 30
